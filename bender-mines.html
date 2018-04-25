@@ -7,7 +7,8 @@
         display: block;
       }
     </style>
-    <h2>Hello [[prop1]]!</h2>
+    <h2>Settings [[fieldX]], [[fieldX]], [[game]]</h2>
+    <p>PSP</p>
   </template>
 
   <script>
@@ -15,19 +16,115 @@
      * `bender-mines`
      * A simple game
      *
+     * ```
+     * <bender-mines field-x="8" field-y="8" game="easy"></bender-mines>
+     * ```
+     *
      * @customElement
      * @polymer
      * @demo demo/index.html
      */
     class BenderMines extends Polymer.Element {
+      // https://stackoverflow.com/questions/24867741/polymer-global-variables
+
       static get is() { return 'bender-mines'; }
+
       static get properties() {
         return {
-          prop1: {
+          fieldX: {
+            type: Number,
+            value: 5
+          },
+
+          fieldY: {
+            type: Number,
+            value: 5
+          },
+
+          game: {
             type: String,
-            value: 'bender-mines'
+            value: "easy"
+          },
+          
+          // Play grid, with dimensions X*Y 
+          _playField: {
+            type: Array,
+            value: []
           }
+
         };
+      }
+
+      static get observers() {
+        return [
+          'draw(fieldX, fieldY, game)'
+        ];
+      }
+
+      draw(fieldX, fieldY, game) {
+        this.game = _validateGameDifficulty(game);
+        this.fieldX = _validateFieldSize(fieldX);
+        this.fieldY = _validateFieldSize(fieldY);
+
+        this.randomizeField();
+      }
+
+      randomizeField() {
+        var difficulty = {'easy': 0.2, 'medium': 0.28, 'hard': .33};
+        var i = 0;
+        var m = this.fieldX * this.fieldY;
+
+        this._playField = [];
+
+        for (i; i < m; i += 1) {
+          this._playField.push(randomizer(this.game));
+        }
+
+        function randomizer(game) {
+          if (Math.random() < difficulty[game]) {
+            return 1; // Add mine
+          }
+          return 0; // No mine
+        }
+      }
+
+      ready() {
+        console.log("ready()");
+        this.randomizeField();
+      }
+
+      /**
+       * Validates the size of the game rectangle. Which must be within the range of 5 and 5 * 4. If fails default 5 is returned.
+       * @param {number} size of a single side game rectangle
+       * @returns a valid (default) game difficult level [].
+       */
+       _validateFieldSize(size) {
+        var standard = 5;
+        size = size || standard;
+        if (size < standard || size > standard * 4) {
+          size = 5;
+        }
+        return size;
+      }
+
+      /**
+       * @param {string} game level enumerated by ['easy', 'medium', 'hard']
+       * @returns a valid (default) game difficult level [].
+       */
+      _validateGameDifficulty(game) {
+        var doEasy = 'easy';
+
+        game = game || doEasy;
+        game = game.toLowerCase();
+        switch (game) {
+          case 'easy':
+          case 'medium':
+          case 'hard':
+            break;
+          default:
+            game = doEasy;
+        }
+        return game;
       }
     }
 
