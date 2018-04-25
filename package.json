@@ -1,0 +1,24 @@
+{
+  "name": "bender-mines",
+  "version": "1.0.0",
+  "description": "A simple game as a web component",
+  "main": "index.html",
+  "scripts": {
+    "test": "test/index.html"
+  },
+  "keywords": [
+    "game",
+    "polymer",
+    "web component"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsMeBender/bender-mines.git"
+  },
+  "author": "itsMeBender",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/itsMeBender/bender-mines/issues"
+  },
+  "homepage": "https://github.com/itsMeBender/bender-mines#readme"
+}

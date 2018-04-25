@@ -1,0 +1,4 @@
+node_modules/*
+test/*.map
+test/*.js
+build/*
