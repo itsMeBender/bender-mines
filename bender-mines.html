@@ -1,0 +1,36 @@
+<link rel="import" href="../polymer/polymer-element.html">
+
+<dom-module id="bender-mines">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <h2>Hello [[prop1]]!</h2>
+  </template>
+
+  <script>
+    /**
+     * `bender-mines`
+     * A simple game
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class BenderMines extends Polymer.Element {
+      static get is() { return 'bender-mines'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'bender-mines'
+          }
+        };
+      }
+    }
+
+    window.customElements.define(BenderMines.is, BenderMines);
+  </script>
+</dom-module>

@@ -1,6 +1,21 @@
-# Introduction
+# \<bender-mines\>
 
-This project intension is to learn Polymer 2 web component build.
+A simple game
 
-I thought, the web community could use a simple, basic game.  
-It's like a 'Hello World' statement. As in, it works.
+## Install the Polymer-CLI
+
+First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed. Then run `polymer serve` to serve your element locally.
+
+## Viewing Your Element
+
+```
+$ polymer serve
+```
+
+## Running Tests
+
+```
+$ polymer test
+```
+
+Your application is already set up to be tested via [web-component-tester](https://github.com/Polymer/web-component-tester). Run `polymer test` to run your application's test suite locally.

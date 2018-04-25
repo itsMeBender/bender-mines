@@ -2,3 +2,4 @@ node_modules/*
 test/*.map
 test/*.js
 build/*
+bower_components/*
