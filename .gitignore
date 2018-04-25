@@ -3,3 +3,5 @@ test/*.map
 test/*.js
 build/*
 bower_components/*
+
+analysis.json
