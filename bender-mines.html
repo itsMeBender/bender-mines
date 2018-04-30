@@ -56,6 +56,11 @@
      * @polymer
      * @demo demo/index.html
      */
+
+    const CLEAN = 0;
+    const MINE = 1;
+    const VISIT = 2;
+
     class BenderMines extends Polymer.Element {
       // https://stackoverflow.com/questions/24867741/polymer-global-variables
 
@@ -101,10 +106,11 @@
         this.randomizeField();
         this._eraseGrid();
         this._buildGrid();
+        this._gameStart();
       }
 
       randomizeField() {
-        var difficulty = {'easy': 0.2, 'medium': 0.28, 'hard': .33};
+        var difficulty = {'easy': 0.4, 'medium': 0.48, 'hard': .53};
         var i = 0;
         var m = this.fieldX * this.fieldY;
 
@@ -116,9 +122,9 @@
 
         function randomizer(game) {
           if (Math.random() < difficulty[game]) {
-            return 1; // Add mine
+            return MINE; // Add mine
           }
-          return 0; // No mine
+          return CLEAN; // No mine
         }
       }
 
@@ -147,8 +153,14 @@
           __debug += value;
           grid.appendChild(element);
         });
-        console.log(__debug);
+        console.log(__debug); // See console for a mines grid
         console.log(this._playField);
+      }
+
+      _cleanGameGrid(startField) {
+        let element = this.$.gamegrid.querySelector(`#field${startField}`);
+        element.classList.remove('game-field--untouched');
+        element.classList.add('game-field--explored');
       }
 
       /**
@@ -162,7 +174,43 @@
       }
 
       _gameStart() {
-        
+        let border = this._getBorder(); // Array of coordinates game grid border
+        let field;
+        let startField;
+
+        do {
+          field = Math.floor(Math.random() * border.length);
+          field = border[field];
+          console.log('random:', field);
+          if (this._playField[field] !== MINE) {
+            startField = field;
+          }
+        } while (!startField);
+
+        // Create start situation.
+        this._cleanGameGrid(startField);
+      }
+
+      _getBorder() {
+        let border = new Set();
+        let row;
+        let x = this.fieldX;
+        let y = this.fieldY - 1;
+
+        this._playField.forEach((value, idx) => {
+          row = Math.floor(idx / x);
+          // First and last row of the game grid
+          if (row === 0 || row === y) {
+            border.add(idx);
+          }
+          // First and last column of the game grid
+          if (row > 0 && idx % x === 0 ) {
+            border.add(idx); // Left column
+            border.add(idx - 1); // Right column
+          }
+        });
+
+        return Array.from(border); // From a Set to an Array.
       }
 
       /**
