@@ -147,7 +147,7 @@
         this._playField.forEach((value, idx) => {
           let element = document.createElement('DIV');
           let elementSpan = document.createElement('SPAN');
-          let elementText = document.createTextNode("?");
+          let elementText = document.createTextNode('');  // Don't show anything (mine count)
 
           elementSpan.appendChild(elementText);
           element.appendChild(elementSpan);
@@ -171,8 +171,52 @@
 
       _cleanGameGrid(startField) {
         let element = this.$.gamegrid.querySelector(`#field${startField}`);
+        let mineCount;
+
         element.classList.remove('game-field--untouched');
         element.classList.add('game-field--explored');
+
+        mineCount = this._countMines(startField);
+        if (mineCount === 0) {
+          element.querySelector('SPAN').innerHTML = " ";
+        } else {
+          element.querySelector('SPAN').innerHTML = mineCount;
+        }
+      }
+
+      _countMines(field) {
+        let center = this._fieldNoToCoordinates(field);
+        let coordinate = {};
+        let mines = 0;
+        let scanGrid = [ // Grid 3x3, center is field
+          (field - 1 - this.fieldX), (field - this.fieldX), (field + 1 - this.fieldX),
+          (field - 1              ),                 field, (field + 1),
+          (field - 1 + this.fieldX), (field + this.fieldX), (field + 1 + this.fieldX),
+        ];
+
+        scanGrid.forEach((scanGridField, idx) => {
+          // Validate grid coordinates
+          coordinate = this._fieldNoToCoordinates(scanGridField);
+          if (
+            coordinate.x < center.x - 1 ||
+            coordinate.x > center.x + 1 ||
+            coordinate.y < center.y - 1 ||
+            coordinate.y > center.y + 1 ||
+            coordinate.x >= this.fieldX ||
+            coordinate.y >= this.fieldY ||
+            coordinate.x < 0 ||
+            coordinate.y < 0
+          ) {
+            return; // ScanGrid outside, so skip
+          }
+          // Scan grid field is valid, so check for mine
+          if (this._playField[scanGridField] === MINE) {
+            mines += 1;
+          }
+          // console.log(coordinate);
+        });
+
+        return mines;
       }
 
       /**
@@ -225,6 +269,12 @@
         return Array.from(border); // From a Set to an Array.
       }
 
+      _fieldNoToCoordinates(field) {
+        let x = field % this.fieldX;
+        let y = Math.floor(field / this.fieldX);
+        return {'x': x, 'y': y};
+      }
+      
       /**
        * Validates the size of the game rectangle. Which must be within the range of 5 and 5 * 4. If fails default 5 is returned.
        * @param {number} size of a single side game rectangle
