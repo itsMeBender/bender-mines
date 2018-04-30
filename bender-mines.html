@@ -15,7 +15,14 @@
       .game-field {
         float: left;
         height: 16px;
+        position: relative;
         width: 16px;
+        text-align: center;
+      }
+      .game-field > span {
+        display: inline-block;
+        font-size: 0.7em;
+        vertical-align: middle;
       }
       .game-field--untouched {
         background-color: greenyellow;
@@ -139,6 +146,11 @@
 
         this._playField.forEach((value, idx) => {
           let element = document.createElement('DIV');
+          let elementSpan = document.createElement('SPAN');
+          let elementText = document.createTextNode("?");
+
+          elementSpan.appendChild(elementText);
+          element.appendChild(elementSpan);
 
           element.setAttribute('id', `field${idx}`);
           element.classList.add('game-field', 'game-field--untouched');
@@ -192,7 +204,7 @@
       }
 
       _getBorder() {
-        let border = new Set();
+        let border = new Set(); // To avoid duplicates.
         let row;
         let x = this.fieldX;
         let y = this.fieldY - 1;
