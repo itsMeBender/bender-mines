@@ -66,7 +66,7 @@
 
     const CLEAN = 0;
     const MINE = 1;
-    const VISIT = 2;
+    const VISITED = 2;
 
     class BenderMines extends Polymer.Element {
       // https://stackoverflow.com/questions/24867741/polymer-global-variables
@@ -117,7 +117,7 @@
       }
 
       randomizeField() {
-        var difficulty = {'easy': 0.4, 'medium': 0.48, 'hard': .53};
+        var difficulty = {'easy': 0.3, 'medium': 0.48, 'hard': .53};
         var i = 0;
         var m = this.fieldX * this.fieldY;
 
@@ -173,7 +173,7 @@
       _cleanGameGrid(startField) {
         let element = this.$.gamegrid.querySelector(`#field${startField}`);
         let mineCount;
-        let scanGrid = this._getScanGridFive(startField);
+        let scanGrid = this._getScanGridFive(startField); // Only field UP, DOWN, LEFT, RIGHT and center
 
         element.classList.remove('game-field--untouched');
         element.classList.add('game-field--explored');
@@ -184,6 +184,14 @@
         } else {
           element.querySelector('SPAN').innerHTML = mineCount;
         }
+        this._playField[startField] = VISITED;
+
+        // Start / part of the recursion
+        scanGrid.forEach((fieldNo) => {
+          if (this._playField[fieldNo] === CLEAN) {
+            this._cleanGameGrid(fieldNo);
+          }
+        });
       }
 
       _countMines(fieldNo) {
