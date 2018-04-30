@@ -101,37 +101,40 @@
 
       static get observers() {
         return [
-          'draw(fieldX, fieldY, game)'
+          'drawGameGrid(fieldX, fieldY, game)'
         ];
       }
 
-      draw(fieldX, fieldY, game) {
+      drawGameGrid(fieldX, fieldY, game) {
         this.game = this._validateGameDifficulty(game);
         this.fieldX = this._validateFieldSize(fieldX);
         this.fieldY = this._validateFieldSize(fieldY);
 
-        this.randomizeField();
+        // Prepare a single game session.
+        this.randomizeGameGrid(this.game);
         this._eraseGrid();
         this._buildGrid();
         this._gameStart();
       }
 
-      randomizeField() {
-        var difficulty = {'easy': 0.3, 'medium': 0.48, 'hard': .53};
-        var i = 0;
-        var m = this.fieldX * this.fieldY;
+      randomizeGameGrid(gameOption) {
+        let difficulty = {'easy': 0.22, 'medium': 0.26, 'hard': 0.31}; // These are percentages
+        let gameGridSize = this.fieldX * this.fieldY;
+        let i = 0;
+        let mines = Math.floor(difficulty[gameOption] * gameGridSize);
 
-        this._playField = [];
+        this._playField = []; // Reset
 
-        for (i; i < m; i += 1) {
-          this._playField.push(randomizer(this.game));
+        for (i; i < gameGridSize; i += 1) { // Build gameGrid without mines.
+          this._playField.push(CLEAN);
         }
 
-        function randomizer(game) {
-          if (Math.random() < difficulty[game]) {
-            return MINE; // Add mine
+        while (mines > 0) { // Add these number of mines.
+          let field = Math.floor(Math.random() * gameGridSize); // 0 .. (gameGridSize - 1)
+          if (this._playField[field] === CLEAN) {
+            this._playField[field] = MINE;
+            mines -= 1;
           }
-          return CLEAN; // No mine
         }
       }
 
@@ -312,7 +315,7 @@
        * @returns a valid (default) game difficult level [].
        */
       _validateFieldSize(size) {
-        var standard = 5;
+        let standard = 5;
         size = size || standard;
         if (size < standard || size > standard * 4) {
           size = 5;
@@ -325,7 +328,7 @@
        * @returns a valid (default) game difficult level [].
        */
       _validateGameDifficulty(game) {
-        var doEasy = 'easy';
+        let doEasy = 'easy';
 
         game = game || doEasy;
         game = game.toLowerCase();
