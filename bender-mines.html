@@ -149,6 +149,7 @@
           let elementSpan = document.createElement('SPAN');
           let elementText = document.createTextNode('');  // Don't show anything (mine count)
 
+          // #gamegrid > DIV#field[number] > SPAN 'surrounding mines count'
           elementSpan.appendChild(elementText);
           element.appendChild(elementSpan);
 
@@ -172,6 +173,7 @@
       _cleanGameGrid(startField) {
         let element = this.$.gamegrid.querySelector(`#field${startField}`);
         let mineCount;
+        let scanGrid = this._getScanGridFive(startField);
 
         element.classList.remove('game-field--untouched');
         element.classList.add('game-field--explored');
@@ -188,7 +190,7 @@
         let center = this._fieldNoToCoordinates(fieldNo);
         let coordinate = {};
         let mines = 0;
-        let scanGrid = this._getScanGrid(fieldNo);
+        let scanGrid = this._getScanGridNine(fieldNo);
 
         scanGrid.forEach((scanGridField, idx) => {
           if (this._playField[scanGridField] === MINE) {
@@ -249,14 +251,9 @@
         return Array.from(border); // From a Set to an Array.
       }
 
-      _getScanGrid(fieldNo) {
+      _getScanGrid(fieldNo, scanGrid) {
         let center = this._fieldNoToCoordinates(fieldNo);
         let coordinate = {};
-        let scanGrid = [ // Grid 3x3, center is field
-          (fieldNo - 1 - this.fieldX), (fieldNo - this.fieldX), (fieldNo + 1 - this.fieldX),
-          (fieldNo - 1              ),                 fieldNo, (fieldNo + 1),
-          (fieldNo - 1 + this.fieldX), (fieldNo + this.fieldX), (fieldNo + 1 + this.fieldX),
-        ];
         let validScanGrid = [];
 
         return scanGrid.filter(scanGridField => {
@@ -277,6 +274,22 @@
             return true;
           }
         });
+      }
+
+      _getScanGridNine(fieldNo) {
+        return this._getScanGrid(fieldNo, [ // Grid 3x3, center is field
+          (fieldNo - 1 - this.fieldX), (fieldNo - this.fieldX), (fieldNo + 1 - this.fieldX),
+          (fieldNo - 1              ),                 fieldNo, (fieldNo + 1),
+          (fieldNo - 1 + this.fieldX), (fieldNo + this.fieldX), (fieldNo + 1 + this.fieldX),
+        ]);
+      }
+
+      _getScanGridFive(fieldNo) {
+        return this._getScanGrid(fieldNo, [ // Grid horizontal and vertical center is field
+          (fieldNo - this.fieldX),
+          (fieldNo - 1), fieldNo, (fieldNo + 1),
+          (fieldNo + this.fieldX)
+        ]);
       }
 
       _fieldNoToCoordinates(field) {
