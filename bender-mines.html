@@ -184,36 +184,16 @@
         }
       }
 
-      _countMines(field) {
-        let center = this._fieldNoToCoordinates(field);
+      _countMines(fieldNo) {
+        let center = this._fieldNoToCoordinates(fieldNo);
         let coordinate = {};
         let mines = 0;
-        let scanGrid = [ // Grid 3x3, center is field
-          (field - 1 - this.fieldX), (field - this.fieldX), (field + 1 - this.fieldX),
-          (field - 1              ),                 field, (field + 1),
-          (field - 1 + this.fieldX), (field + this.fieldX), (field + 1 + this.fieldX),
-        ];
+        let scanGrid = this._getScanGrid(fieldNo);
 
         scanGrid.forEach((scanGridField, idx) => {
-          // Validate grid coordinates
-          coordinate = this._fieldNoToCoordinates(scanGridField);
-          if (
-            coordinate.x < center.x - 1 ||
-            coordinate.x > center.x + 1 ||
-            coordinate.y < center.y - 1 ||
-            coordinate.y > center.y + 1 ||
-            coordinate.x >= this.fieldX ||
-            coordinate.y >= this.fieldY ||
-            coordinate.x < 0 ||
-            coordinate.y < 0
-          ) {
-            return; // ScanGrid outside, so skip
-          }
-          // Scan grid field is valid, so check for mine
           if (this._playField[scanGridField] === MINE) {
             mines += 1;
           }
-          // console.log(coordinate);
         });
 
         return mines;
@@ -267,6 +247,36 @@
         });
 
         return Array.from(border); // From a Set to an Array.
+      }
+
+      _getScanGrid(fieldNo) {
+        let center = this._fieldNoToCoordinates(fieldNo);
+        let coordinate = {};
+        let scanGrid = [ // Grid 3x3, center is field
+          (fieldNo - 1 - this.fieldX), (fieldNo - this.fieldX), (fieldNo + 1 - this.fieldX),
+          (fieldNo - 1              ),                 fieldNo, (fieldNo + 1),
+          (fieldNo - 1 + this.fieldX), (fieldNo + this.fieldX), (fieldNo + 1 + this.fieldX),
+        ];
+        let validScanGrid = [];
+
+        return scanGrid.filter(scanGridField => {
+          // Validate grid coordinates
+          coordinate = this._fieldNoToCoordinates(scanGridField);
+          if (
+            coordinate.x < center.x - 1 ||
+            coordinate.x > center.x + 1 ||
+            coordinate.y < center.y - 1 ||
+            coordinate.y > center.y + 1 ||
+            coordinate.x >= this.fieldX ||
+            coordinate.y >= this.fieldY ||
+            coordinate.x < 0 ||
+            coordinate.y < 0
+          ) {
+            return false; // ScanGrid partly outside game grid, so next Array item.
+          } else {
+            return true;
+          }
+        });
       }
 
       _fieldNoToCoordinates(field) {
