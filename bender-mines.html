@@ -5,9 +5,42 @@
     <style>
       :host {
         display: block;
+        width: auto;
+      }
+      :host::after { 
+        content: "";
+        display: block; 
+        clear: both;
+      }
+      .game-field {
+        float: left;
+        height: 16px;
+        width: 16px;
+      }
+      .game-field--untouched {
+        background-color: greenyellow;
+      }
+      .game-field--explored {
+        background-color: lightgray;
+      }
+      .game-field--flagged {
+        background-color: red;
+      }
+      .game-grid {
+        display: inline-block;
+        width: auto;
+      }
+      .game-grid::after { 
+        content: "";
+        display: block; 
+        clear: both;
+      }
+      .clear-left {
+        clear: left;
       }
     </style>
-    <h2>Settings [[fieldX]], [[fieldX]], '[[game]]'.</h2>
+    <h2>Settings [[fieldX]]&times;[[fieldY]] '[[game]]'.</h2>
+    <div id="gamegrid" class="game-grid"></div>
   </template>
 
   <script>
@@ -61,11 +94,13 @@
       }
 
       draw(fieldX, fieldY, game) {
-        this.game = _validateGameDifficulty(game);
-        this.fieldX = _validateFieldSize(fieldX);
-        this.fieldY = _validateFieldSize(fieldY);
+        this.game = this._validateGameDifficulty(game);
+        this.fieldX = this._validateFieldSize(fieldX);
+        this.fieldY = this._validateFieldSize(fieldY);
 
         this.randomizeField();
+        this._eraseGrid();
+        this._buildGrid();
       }
 
       randomizeField() {
@@ -87,13 +122,55 @@
         }
       }
 
+      /**
+       * Build the initial gamegrid with elements
+       */
+      _buildGrid() {
+        const grid = this.$.gamegrid;
+        let row;
+        let x = this.fieldX;
+        let __debug = ''; // TODO: Remove functionallity
+
+        this._playField.forEach((value, idx) => {
+          let element = document.createElement('DIV');
+
+          element.setAttribute('id', `field${idx}`);
+          element.classList.add('game-field', 'game-field--untouched');
+
+          // Start a new ROW of game fields
+          if (row !== Math.floor(idx / x)) {
+            row = Math.floor(idx / x); // 0, 1, 2, ...
+            element.classList.add('clear-left');
+            console.log(__debug);
+            __debug = '';
+          }
+          __debug += value;
+          grid.appendChild(element);
+        });
+        console.log(__debug);
+        console.log(this._playField);
+      }
+
+      /**
+       * Erase (if) existing gamegrid.
+       */
+      _eraseGrid() {
+        let grid = this.$.gamegrid;
+        while (grid.firstChild) {
+          grid.removeChild(grid.firstChild);
+        }
+      }
+
+      _gameStart() {
+        
+      }
 
       /**
        * Validates the size of the game rectangle. Which must be within the range of 5 and 5 * 4. If fails default 5 is returned.
        * @param {number} size of a single side game rectangle
        * @returns a valid (default) game difficult level [].
        */
-       _validateFieldSize(size) {
+      _validateFieldSize(size) {
         var standard = 5;
         size = size || standard;
         if (size < standard || size > standard * 4) {
