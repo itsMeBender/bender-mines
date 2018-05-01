@@ -1,4 +1,5 @@
 <link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/utils/render-status.html">
 
 <dom-module id="bender-mines">
   <template>
@@ -45,14 +46,19 @@
       .clear-left {
         clear: left;
       }
+
     </style>
-    <h2>Settings [[fieldX]]&times;[[fieldY]] '[[game]]'.</h2>
+    <!-- <h2>Settings [[fieldX]]&times;[[fieldY]] '[[game]]'.</h2> -->
     <div id="gamegrid" class="game-grid"></div>
+    <slot id="graphics"></slot>
   </template>
 
   <script>
     /**
-     * `bender-mines`
+<img src="tile_flag.png" width="32" height="32">
+  <img src="tile_grid.png" width="32" height="32">
+  <img src="tile_mine.png" width="32" height="32">
+  <img src="tile_visited.png" width="32" height="32">     * `bender-mines`
      * A simple game
      *
      * ```
@@ -95,7 +101,6 @@
             type: Array,
             value: []
           }
-
         };
       }
 
@@ -105,7 +110,38 @@
         ];
       }
 
+connectedCallback() {
+  let imgLst = [];
+
+  // https://stackoverflow.com/questions/45585503/polymer-2-0-event-listeners-where-is-the-ideal-place-to-add-it
+  // https://www.polymer-project.org/2.0/docs/upgrade#callback-contracts-have-changed
+    super.connectedCallback();
+    this.addEventListener('click', this.myFunction.bind(this));
+    // Monitor the content of SLOT
+    this._observer = new Polymer.FlattenedNodesObserver(this, function(info) {
+      // info is {target: '...', addedNodes: [...], removedNodes: [...]}
+      console.log('info', info);
+      info.addedNodes.forEach((node) => {
+        if (node.nodeName.toUpperCase() === 'IMG') {
+          console.log(node.nodeName);
+          imgLst.push(node);
+        }
+      });
+      this._imgLst = imgLst;
+    });
+}
+
+disconnectedCallback() {
+    super.disconnetedCallback();
+    this.removeEventListener('click', this.myFunction);
+    this._observer.disconnect();
+}
+myFunction (me) {
+  console.log('click:', me, this._imgLst);
+}
+
       drawGameGrid(fieldX, fieldY, game) {
+        console.log('drawGameGrid:', this._imgLst);
         this.game = this._validateGameDifficulty(game);
         this.fieldX = this._validateFieldSize(fieldX);
         this.fieldY = this._validateFieldSize(fieldY);
