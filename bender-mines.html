@@ -21,8 +21,15 @@
         text-align: center;
       }
       .game-field > span {
+        color: white;
+        font-size: 14px;
+        font-weight: 900;
+        text-shadow: 1px 1px 3px #000;
+
+        @apply --minesFont;
+      }
+      .game-field > span.fixed-styling {
         display: inline-block;
-        font-size: 0.7em;
         vertical-align: middle;
       }
       .game-field--untouched {
@@ -32,6 +39,9 @@
         background-color: lightgray;
       }
       .game-field--flagged {
+        background-color: blueviolet;
+      }
+      .game-field--mined {
         background-color: red;
       }
 
@@ -246,6 +256,7 @@ console.log(this.imgURI);
 
           // #gamegrid > DIV#field[number] > SPAN 'surrounding mines count'
           elementSpan.appendChild(elementText);
+          elementSpan.classList.add('fixed-styling');
           element.appendChild(elementSpan);
 
           element.setAttribute('id', `field${idx}`);
