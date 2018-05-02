@@ -4,7 +4,6 @@
   <template strip-whitespace>
     <style>
       :host {
-        background-color: burlywood;
         display: block;
         width: auto;
       }
@@ -16,9 +15,9 @@
 
       .game-field {
         float: left;
-        height: 16px;
+        height: 32px;
         position: relative;
-        width: 16px;
+        width: 32px;
         text-align: center;
       }
       .game-field > span {
@@ -132,8 +131,9 @@ _checkImagesAssets(imgNodes) { // TODO: Function not used
 
 connectedCallback() {
   let imgNodes = [];
-  let imgURI = {'flag': '', 'grid': '', 'mine': '', 'visited': ''};
   let msg;
+
+  this.imgURI = {'flag': '', 'grid': '', 'mine': '', 'visited': ''};
 
   // https://stackoverflow.com/questions/45585503/polymer-2-0-event-listeners-where-is-the-ideal-place-to-add-it
   // https://www.polymer-project.org/2.0/docs/upgrade#callback-contracts-have-changed
@@ -161,16 +161,16 @@ connectedCallback() {
         // node.parentNode.removeChild(node);
         switch (true) {
           case (imgName.indexOf('tile_flag') >= 0):
-            imgURI.flag = imgName;
+            this.imgURI.flag = imgName;
             break;
           case (imgName.indexOf('tile_grid') >= 0):
-            imgURI.grid = imgName;
+            this.imgURI.grid = imgName;
             break;
           case (imgName.indexOf('tile_mine') >= 0):
-            imgURI.mine = imgName;
+            this.imgURI.mine = imgName;
             break;
           case (imgName.indexOf('tile_visited') >= 0):
-            imgURI.visited = imgName;
+            this.imgURI.visited = imgName;
             break;
         }
 
@@ -178,7 +178,7 @@ connectedCallback() {
       });
 
       // Check existence of needed IMAGES
-      if (imgURI.flag === '' || imgURI.grid === '' || imgURI.mine === '' || imgURI.visited === '') {
+      if (this.imgURI.flag === '' || this.imgURI.grid === '' || this.imgURI.mine === '' || this.imgURI.visited === '') {
         throw `content error: "missing one of these images 'tile_flag.png', 'tile_grid.png', 'tile_mine.png', 'tile_visited.png'"`;
       }
 
@@ -238,7 +238,7 @@ myFunction (me) {
         let row;
         let x = this.fieldX;
         let __debug = ''; // TODO: Remove functionallity
-
+console.log(this.imgURI);
         this._playField.forEach((value, idx) => {
           let element = document.createElement('DIV');
           let elementSpan = document.createElement('SPAN');
@@ -249,6 +249,7 @@ myFunction (me) {
           element.appendChild(elementSpan);
 
           element.setAttribute('id', `field${idx}`);
+          element.setAttribute('style', `background-image: url(${this.imgURI.grid});`);
           element.classList.add('game-field', 'game-field--untouched');
 
           // Start a new ROW of game fields
@@ -271,6 +272,7 @@ myFunction (me) {
         let scanGrid = this._getScanGridFive(startField); // Only field UP, DOWN, LEFT, RIGHT and center
 
         element.classList.remove('game-field--untouched');
+        element.setAttribute('style', `background-image: url(${this.imgURI.visited});`);
         element.classList.add('game-field--explored');
 
         mineCount = this._countMines(startField);
