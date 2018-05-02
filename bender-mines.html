@@ -14,6 +14,12 @@
       }
 
       .game-field {
+        display: -webkit-flex;
+        -webkit-align-items: center;
+        display: -moz-box;
+        -moz-box-align: center;
+        display: flex;
+        align-items: center;
         float: left;
         height: 32px;
         position: relative;
@@ -26,11 +32,13 @@
         font-weight: 900;
         text-shadow: 1px 1px 3px #000;
 
-        @apply --minesFont;
+        @apply --mines-font;
       }
-      .game-field > span.fixed-styling {
+      .game-field > span.fixed-styling { /* Prevent styling overwriting by mixin */
         display: inline-block;
-        vertical-align: middle;
+        width: auto;
+        margin-left: auto;
+        margin-right: auto;
       }
       .game-field--untouched {
         background-color: greenyellow;
