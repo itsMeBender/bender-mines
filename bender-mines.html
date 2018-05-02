@@ -1,10 +1,10 @@
 <link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../polymer/lib/utils/render-status.html">
 
 <dom-module id="bender-mines">
-  <template>
+  <template strip-whitespace>
     <style>
       :host {
+        background-color: burlywood;
         display: block;
         width: auto;
       }
@@ -13,6 +13,7 @@
         display: block; 
         clear: both;
       }
+
       .game-field {
         float: left;
         height: 16px;
@@ -34,6 +35,7 @@
       .game-field--flagged {
         background-color: red;
       }
+
       .game-grid {
         display: inline-block;
         width: auto;
@@ -43,10 +45,10 @@
         display: block; 
         clear: both;
       }
+
       .clear-left {
         clear: left;
-      }
-
+      }      
     </style>
     <!-- <h2>Settings [[fieldX]]&times;[[fieldY]] '[[game]]'.</h2> -->
     <div id="gamegrid" class="game-grid"></div>
@@ -103,32 +105,86 @@
           }
         };
       }
-
+/*
       static get observers() {
         return [
           'drawGameGrid(fieldX, fieldY, game)'
         ];
       }
+*/
+
+_checkImagesAssets(imgNodes) { // TODO: Function not used
+  let checkFor = ''; // A string contaning IMG filenames, as content in SLOT-element
+  let expected = ['tile_flag', 'tile_grid', 'tile_mine', 'tile_visited'];
+  let missing = '';
+
+  imgNodes.forEach(node => checkFor += node.src);
+
+  expected.forEach(filename => {
+    if (checkFor.indexOf(filename) < 0) {
+      missing = missing || 'missing image';
+      missing += `, '${filename}'`;
+    }
+  });
+
+  return missing;
+}
 
 connectedCallback() {
-  let imgLst = [];
+  let imgNodes = [];
+  let imgURI = {'flag': '', 'grid': '', 'mine': '', 'visited': ''};
+  let msg;
 
   // https://stackoverflow.com/questions/45585503/polymer-2-0-event-listeners-where-is-the-ideal-place-to-add-it
   // https://www.polymer-project.org/2.0/docs/upgrade#callback-contracts-have-changed
-    super.connectedCallback();
-    this.addEventListener('click', this.myFunction.bind(this));
-    // Monitor the content of SLOT
-    this._observer = new Polymer.FlattenedNodesObserver(this, function(info) {
-      // info is {target: '...', addedNodes: [...], removedNodes: [...]}
-      console.log('info', info);
-      info.addedNodes.forEach((node) => {
-        if (node.nodeName.toUpperCase() === 'IMG') {
-          console.log(node.nodeName);
-          imgLst.push(node);
-        }
-      });
-      this._imgLst = imgLst;
+  super.connectedCallback();
+
+  // Game interaction
+  this.addEventListener('click', this.myFunction.bind(this));
+
+  // Monitor the content of SLOT
+  // info is {target: '...', addedNodes: [...], removedNodes: [...]}
+  this._observer = new Polymer.FlattenedNodesObserver(this, function(info) {
+    let connectedCallbackType = 'removed';
+
+    info.addedNodes.forEach((node) => {
+      if (node.nodeName.toUpperCase() === 'IMG') {
+        imgNodes.push(node);
+        connectedCallbackType = 'added';
+      }
     });
+
+    if (connectedCallbackType === 'added') {
+      // Found nodes, find IMAGES to be used as backgrounds 
+      imgNodes.forEach((node) => {
+        let imgName = node.getAttribute('src');
+        // node.parentNode.removeChild(node);
+        switch (true) {
+          case (imgName.indexOf('tile_flag') >= 0):
+            imgURI.flag = imgName;
+            break;
+          case (imgName.indexOf('tile_grid') >= 0):
+            imgURI.grid = imgName;
+            break;
+          case (imgName.indexOf('tile_mine') >= 0):
+            imgURI.mine = imgName;
+            break;
+          case (imgName.indexOf('tile_visited') >= 0):
+            imgURI.visited = imgName;
+            break;
+        }
+
+        Polymer.dom(node).parentNode.removeChild(node); // Clear-up SLOT-element
+      });
+
+      // Check existence of needed IMAGES
+      if (imgURI.flag === '' || imgURI.grid === '' || imgURI.mine === '' || imgURI.visited === '') {
+        throw `content error: "missing one of these images 'tile_flag.png', 'tile_grid.png', 'tile_mine.png', 'tile_visited.png'"`;
+      }
+
+      this.drawGameGrid(this.fieldX, this.fieldY, this.game);
+    }
+  });
 }
 
 disconnectedCallback() {
@@ -136,12 +192,12 @@ disconnectedCallback() {
     this.removeEventListener('click', this.myFunction);
     this._observer.disconnect();
 }
+
 myFunction (me) {
-  console.log('click:', me, this._imgLst);
+  console.log('click:', me);
 }
 
       drawGameGrid(fieldX, fieldY, game) {
-        console.log('drawGameGrid:', this._imgLst);
         this.game = this._validateGameDifficulty(game);
         this.fieldX = this._validateFieldSize(fieldX);
         this.fieldY = this._validateFieldSize(fieldY);
