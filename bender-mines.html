@@ -74,11 +74,7 @@
 
   <script>
     /**
-<img src="tile_flag.png" width="32" height="32">
-  <img src="tile_grid.png" width="32" height="32">
-  <img src="tile_mine.png" width="32" height="32">
-  <img src="tile_visited.png" width="32" height="32">     * `bender-mines`
-     * A simple game
+     * A simple Mines exploring game
      *
      * ```
      * <bender-mines field-x="8" field-y="8" game="easy"></bender-mines>
@@ -100,28 +96,29 @@
 
       static get properties() {
         return {
+          // Horizontal field size, maximim 20.
           fieldX: {
             type: Number,
             value: 5
           },
-
+          // Vertical field size, maximim 20.
           fieldY: {
             type: Number,
             value: 5
           },
-
+          // Game difficulty 'easy', 'medium' and 'hard'.
           game: {
             type: String,
             value: "easy"
           },
-          
-          // Play grid, with dimensions X*Y 
+          // Play grid, with dimensions X*Y. Contains game data. 
           _playField: {
             type: Array,
             value: []
           }
         };
       }
+
 /*
       static get observers() {
         return [
@@ -130,90 +127,69 @@
       }
 */
 
-_checkImagesAssets(imgNodes) { // TODO: Function not used
-  let checkFor = ''; // A string contaning IMG filenames, as content in SLOT-element
-  let expected = ['tile_flag', 'tile_grid', 'tile_mine', 'tile_visited'];
-  let missing = '';
+      connectedCallback() {
+        let imgNodes = [];
+        let msg;
 
-  imgNodes.forEach(node => checkFor += node.src);
+        this.imgURI = {'flag': '', 'grid': '', 'mine': '', 'visited': ''};
 
-  expected.forEach(filename => {
-    if (checkFor.indexOf(filename) < 0) {
-      missing = missing || 'missing image';
-      missing += `, '${filename}'`;
-    }
-  });
+        // https://stackoverflow.com/questions/45585503/polymer-2-0-event-listeners-where-is-the-ideal-place-to-add-it
+        // https://www.polymer-project.org/2.0/docs/upgrade#callback-contracts-have-changed
+        super.connectedCallback();
 
-  return missing;
-}
+        // Game interaction
+        this.addEventListener('click', this._clickOnField.bind(this));
 
-connectedCallback() {
-  let imgNodes = [];
-  let msg;
+        // Monitor the content of SLOT
+        // info is {target: '...', addedNodes: [...], removedNodes: [...]}
+        this._observer = new Polymer.FlattenedNodesObserver(this, function(info) {
+          let connectedCallbackType = 'removed';
 
-  this.imgURI = {'flag': '', 'grid': '', 'mine': '', 'visited': ''};
+          info.addedNodes.forEach((node) => {
+            if (node.nodeName.toUpperCase() === 'IMG') {
+              imgNodes.push(node);
+              connectedCallbackType = 'added';
+            }
+          });
 
-  // https://stackoverflow.com/questions/45585503/polymer-2-0-event-listeners-where-is-the-ideal-place-to-add-it
-  // https://www.polymer-project.org/2.0/docs/upgrade#callback-contracts-have-changed
-  super.connectedCallback();
+          if (connectedCallbackType === 'added') {
+            // Found nodes, find IMAGES to be used as backgrounds 
+            imgNodes.forEach((node) => {
+              let imgName = node.getAttribute('src');
+              // node.parentNode.removeChild(node);
+              switch (true) {
+                case (imgName.indexOf('tile_flag') >= 0):
+                  this.imgURI.flag = imgName;
+                  break;
+                case (imgName.indexOf('tile_grid') >= 0):
+                  this.imgURI.grid = imgName;
+                  break;
+                case (imgName.indexOf('tile_mine') >= 0):
+                  this.imgURI.mine = imgName;
+                  break;
+                case (imgName.indexOf('tile_visited') >= 0):
+                  this.imgURI.visited = imgName;
+                  break;
+              }
 
-  // Game interaction
-  this.addEventListener('click', this.myFunction.bind(this));
+              Polymer.dom(node).parentNode.removeChild(node); // Clear-up SLOT-element
+            });
 
-  // Monitor the content of SLOT
-  // info is {target: '...', addedNodes: [...], removedNodes: [...]}
-  this._observer = new Polymer.FlattenedNodesObserver(this, function(info) {
-    let connectedCallbackType = 'removed';
+            // Check existence of needed IMAGES
+            if (this.imgURI.flag === '' || this.imgURI.grid === '' || this.imgURI.mine === '' || this.imgURI.visited === '') {
+              throw `content error: "missing one of these images 'tile_flag.png', 'tile_grid.png', 'tile_mine.png', 'tile_visited.png'"`;
+            }
 
-    info.addedNodes.forEach((node) => {
-      if (node.nodeName.toUpperCase() === 'IMG') {
-        imgNodes.push(node);
-        connectedCallbackType = 'added';
-      }
-    });
-
-    if (connectedCallbackType === 'added') {
-      // Found nodes, find IMAGES to be used as backgrounds 
-      imgNodes.forEach((node) => {
-        let imgName = node.getAttribute('src');
-        // node.parentNode.removeChild(node);
-        switch (true) {
-          case (imgName.indexOf('tile_flag') >= 0):
-            this.imgURI.flag = imgName;
-            break;
-          case (imgName.indexOf('tile_grid') >= 0):
-            this.imgURI.grid = imgName;
-            break;
-          case (imgName.indexOf('tile_mine') >= 0):
-            this.imgURI.mine = imgName;
-            break;
-          case (imgName.indexOf('tile_visited') >= 0):
-            this.imgURI.visited = imgName;
-            break;
-        }
-
-        Polymer.dom(node).parentNode.removeChild(node); // Clear-up SLOT-element
-      });
-
-      // Check existence of needed IMAGES
-      if (this.imgURI.flag === '' || this.imgURI.grid === '' || this.imgURI.mine === '' || this.imgURI.visited === '') {
-        throw `content error: "missing one of these images 'tile_flag.png', 'tile_grid.png', 'tile_mine.png', 'tile_visited.png'"`;
+            this.drawGameGrid(this.fieldX, this.fieldY, this.game);
+          }
+        });
       }
 
-      this.drawGameGrid(this.fieldX, this.fieldY, this.game);
-    }
-  });
-}
-
-disconnectedCallback() {
-    super.disconnetedCallback();
-    this.removeEventListener('click', this.myFunction);
-    this._observer.disconnect();
-}
-
-myFunction (me) {
-  console.log('click:', me);
-}
+      disconnectedCallback() {
+          super.disconnetedCallback();
+          this.removeEventListener('click', this._clickOnField);
+          this._observer.disconnect();
+      }
 
       drawGameGrid(fieldX, fieldY, game) {
         this.game = this._validateGameDifficulty(game);
@@ -310,6 +286,10 @@ console.log(this.imgURI);
         });
       }
 
+      _clickOnField (me) {
+        console.log('click:', me);
+      }
+
       _countMines(fieldNo) {
         let center = this._fieldNoToCoordinates(fieldNo);
         let coordinate = {};
@@ -375,7 +355,7 @@ console.log(this.imgURI);
         return Array.from(border); // From a Set to an Array.
       }
 
-      _getScanGrid(fieldNo, scanGrid) {
+      _scanGrid(fieldNo, scanGrid) {
         let center = this._fieldNoToCoordinates(fieldNo);
         let coordinate = {};
         let validScanGrid = [];
@@ -400,30 +380,49 @@ console.log(this.imgURI);
         });
       }
 
-      _getScanGridNine(fieldNo) {
-        return this._getScanGrid(fieldNo, [ // Grid 3x3, center is field
+      /**
+       * Using `fieldNo` the fields around this center are validated to be a existing field.
+       * Not lying outside the game grid coordinates.
+       * @param {number} fieldNo is the center of scan
+       * @returns an array of game grid valid fieldNo's
+       */
+       _getScanGridNine(fieldNo) {
+        return this._scanGrid(fieldNo, [ // Grid 3x3, center is field
           (fieldNo - 1 - this.fieldX), (fieldNo - this.fieldX), (fieldNo + 1 - this.fieldX),
           (fieldNo - 1              ),                 fieldNo, (fieldNo + 1),
           (fieldNo - 1 + this.fieldX), (fieldNo + this.fieldX), (fieldNo + 1 + this.fieldX),
         ]);
       }
 
+      /**
+       * Using `fieldNo` the upper-, lower, left- and right-field are validated to be a existing field.
+       * Not lying outside the game grid coordinates.
+       * @param {number} fieldNo is the center of scan
+       * @returns an array of game grid valid fieldNo's
+       */
       _getScanGridFive(fieldNo) {
-        return this._getScanGrid(fieldNo, [ // Grid horizontal and vertical center is field
+        return this._scanGrid(fieldNo, [ // Grid horizontal and vertical center is field
           (fieldNo - this.fieldX),
           (fieldNo - 1), fieldNo, (fieldNo + 1),
           (fieldNo + this.fieldX)
         ]);
       }
 
-      _fieldNoToCoordinates(field) {
-        let x = field % this.fieldX;
-        let y = Math.floor(field / this.fieldX);
+      /**
+       * A given `fieldNo` is transformed into a x, y-coordinate.
+       * Based on the X- and Y-gamedimensions (the gamegrid).
+       * @param {number} fieldNo to translate into a game coordinate.
+       * @returns an object, containg properties x, y.
+       */
+      _fieldNoToCoordinates(fieldNo) {
+        let x = fieldNo % this.fieldX;
+        let y = Math.floor(fieldNo / this.fieldX);
         return {'x': x, 'y': y};
       }
       
       /**
-       * Validates the size of the game rectangle. Which must be within the range of 5 and 5 * 4. If fails default 5 is returned.
+       * Validates the size of the game rectangle. Which must be within the range of 5 and 5 * 4.
+       * If fails, default fieldsize '5' is returned.
        * @param {number} size of a single side game rectangle
        * @returns a valid (default) game difficult level [].
        */
@@ -431,20 +430,21 @@ console.log(this.imgURI);
         let standard = 5;
         size = size || standard;
         if (size < standard || size > standard * 4) {
-          size = 5;
+          size = standard;
         }
         return size;
       }
 
       /**
        * @param {string} game level enumerated by ['easy', 'medium', 'hard']
-       * @returns a valid (default) game difficult level [].
+       * @returns a valid game difficult level []. By default 'easy'.
        */
       _validateGameDifficulty(game) {
         let doEasy = 'easy';
 
         game = game || doEasy;
         game = game.toLowerCase();
+        // Validate ENUMARATED game difficulty types.
         switch (game) {
           case 'easy':
           case 'medium':
