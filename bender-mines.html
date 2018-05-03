@@ -140,7 +140,7 @@
         super.connectedCallback();
 
         // Game interaction
-        // this.addEventListener('click', this._clickOnField.bind(this));
+        // this.addEventListener('click', this._handleFieldClick.bind(this));
 
         // Monitor the content of SLOT
         // info is {target: '...', addedNodes: [...], removedNodes: [...]}
@@ -192,7 +192,7 @@
 
       disconnectedCallback() {
           super.disconnetedCallback();
-          // this.removeEventListener('click', this._clickOnField);
+          // this.removeEventListener('click', this._handleFieldClick);
           this._eraseGrid(); // Just to remove all the ' click' event on game fields
           this._observer.disconnect();
       }
@@ -253,7 +253,7 @@
           element.setAttribute('style', `background-image: url(${this.imgURI.grid});`);
           element.classList.add('game-field', 'game-field--untouched');
 
-          element.addEventListener('click', this._clickOnField.bind(this));
+          element.addEventListener('click', this._handleFieldClick.bind(this));
 
           // Start a new ROW of game fields
           if (row !== Math.floor(idx / x)) {
@@ -268,6 +268,10 @@
         console.log(__debug); // See console for a mines grid
       }
 
+      /**
+       * Clear the field, startring from given `startfield`.
+       * @param {number} startfield
+       */
       _cleanGameGrid(startField) {
         let element = this.$.gamegrid.querySelector(`#field${startField}`);
         let mineCount;
@@ -293,14 +297,19 @@
         });
       }
 
-      _clickOnField (me) {
-        let fieldNo = me.currentTarget.id.substring(5); // Remove 'field'-label.
-
-        if (this._playField[fieldNo] === MINE) {
-          this._showAllMines(fieldNo);
-        } else {
-          this._cleanGameGrid(fieldNo);
-        }
+      /**
+       * Count the number of untouched fields 'CLEAN'.
+       * It will be used as an indicator, for finishing the game.
+       * @returns {number} of 'CLEAN' fields
+       */
+       _countCleanFields() {
+        let clean = 0; // Default
+        this._playField.forEach((val, idx) => {
+          if (val === CLEAN) {
+            clean += 1;
+          }
+        });
+        return clean;
       }
 
       /**
@@ -328,11 +337,23 @@
       _eraseGrid() {
         let grid = this.$.gamegrid;
         while (grid.firstChild) {
-          grid.removeEventListener('click', this._clickOnField);
+          grid.removeEventListener('click', this._handleFieldClick);
           grid.removeChild(grid.firstChild);
         }
       }
 
+      /**
+       * A given `fieldNo` is transformed into a x, y-coordinate.
+       * Based on the X- and Y-gamedimensions (the gamegrid).
+       * @param {number} fieldNo to translate into a game coordinate.
+       * @returns an object, containg properties x, y.
+       */
+       _fieldNoToCoordinates(fieldNo) {
+        let x = fieldNo % this.fieldX;
+        let y = Math.floor(fieldNo / this.fieldX);
+        return {'x': x, 'y': y};
+      }
+     
       /**
        * TODO: It's not realy a game start ~ Its' more debug?
        * it show a fisrt openings step, by selecting a field at
@@ -414,17 +435,25 @@
       }
 
       /**
-       * A given `fieldNo` is transformed into a x, y-coordinate.
-       * Based on the X- and Y-gamedimensions (the gamegrid).
-       * @param {number} fieldNo to translate into a game coordinate.
-       * @returns an object, containg properties x, y.
+       * User clicked on a field. Check field for a MINE and if so, show all mines.
+       * Else automatically clear game grid.
+       * @param {event} of the element CLICKED on.
        */
-      _fieldNoToCoordinates(fieldNo) {
-        let x = fieldNo % this.fieldX;
-        let y = Math.floor(fieldNo / this.fieldX);
-        return {'x': x, 'y': y};
+      _handleFieldClick(me) {
+        let fieldNo = me.currentTarget.id.substring(5); // Remove 'field'-label, to get index.
+console.log(this._countCleanFields());
+
+        if (this._playField[fieldNo] === MINE) {
+          this._showAllMines(fieldNo);
+        } else {
+          this._cleanGameGrid(fieldNo);
+          if (this._countCleanFields() === 0) {
+            // Game finished.
+            this._setFlagsToAllMines();
+          }
+        }
       }
-     
+
       /**
        * This function returns a validated array of fieldNo's.
        * Validation is based of the fact that the surrounding fields,
@@ -458,6 +487,20 @@
             return true;
           }
         });
+      }
+
+      /**
+       * Mark all mine fields with a FLAG.
+       * Indicating game end. Player has won.
+       */
+      _setFlagsToAllMines() {
+        this._playField.forEach((val, idx) => {
+          let element;
+          if (val === MINE) {
+            element = this.$.gamegrid.querySelector(`#field${idx}`);
+            element.setAttribute('style', `background-image: url(${this.imgURI.flag});`);
+          }
+        });        
       }
 
       /**
