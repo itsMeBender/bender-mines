@@ -14,6 +14,7 @@
       }
 
       .game-field {
+        cursor: pointer;
         display: -webkit-flex;
         -webkit-align-items: center;
         display: -moz-box;
@@ -35,6 +36,7 @@
         @apply --mines-font;
       }
       .game-field > span.fixed-styling { /* Prevent styling overwriting by mixin */
+        cursor: pointer;
         display: inline-block;
         width: auto;
         margin-left: auto;
@@ -138,7 +140,7 @@
         super.connectedCallback();
 
         // Game interaction
-        this.addEventListener('click', this._clickOnField.bind(this));
+        // this.addEventListener('click', this._clickOnField.bind(this));
 
         // Monitor the content of SLOT
         // info is {target: '...', addedNodes: [...], removedNodes: [...]}
@@ -177,7 +179,10 @@
 
             // Check existence of needed IMAGES
             if (this.imgURI.flag === '' || this.imgURI.grid === '' || this.imgURI.mine === '' || this.imgURI.visited === '') {
-              throw `content error: "missing one of these images 'tile_flag.png', 'tile_grid.png', 'tile_mine.png', 'tile_visited.png'"`;
+              // Just a CONSOLE warning! 
+              // Fallback is that all tiles do have a different background color.
+              // So you can play with no images attached
+              console.log(`content warning: "missing one of these images 'tile_flag.png', 'tile_grid.png', 'tile_mine.png', 'tile_visited.png'"`);
             }
 
             this.drawGameGrid(this.fieldX, this.fieldY, this.game);
@@ -187,7 +192,8 @@
 
       disconnectedCallback() {
           super.disconnetedCallback();
-          this.removeEventListener('click', this._clickOnField);
+          // this.removeEventListener('click', this._clickOnField);
+          this._eraseGrid(); // Just to remove all the ' click' event on game fields
           this._observer.disconnect();
       }
 
@@ -225,14 +231,14 @@
       }
 
       /**
-       * Build the initial gamegrid with elements
+       * Build the initial game grid with elements
        */
       _buildGrid() {
         const grid = this.$.gamegrid;
         let row;
         let x = this.fieldX;
         let __debug = ''; // TODO: Remove functionallity
-console.log(this.imgURI);
+
         this._playField.forEach((value, idx) => {
           let element = document.createElement('DIV');
           let elementSpan = document.createElement('SPAN');
@@ -246,6 +252,8 @@ console.log(this.imgURI);
           element.setAttribute('id', `field${idx}`);
           element.setAttribute('style', `background-image: url(${this.imgURI.grid});`);
           element.classList.add('game-field', 'game-field--untouched');
+
+          element.addEventListener('click', this._clickOnField.bind(this));
 
           // Start a new ROW of game fields
           if (row !== Math.floor(idx / x)) {
@@ -286,7 +294,14 @@ console.log(this.imgURI);
       }
 
       _clickOnField (me) {
-        console.log('click:', me.target, me.currentTarget);
+        let fieldNo = me.currentTarget.id.substring(5); // Remove 'field'-label.
+        // console.log('click:', me.target, me.currentTarget);
+        // console.log('click:', fieldNo, this._playField[fieldNo]);
+        if (this._playField[fieldNo] === MINE) {
+          console.log("Boom!");
+        } else {
+          this._cleanGameGrid(fieldNo);
+        }
       }
 
       /**
@@ -314,6 +329,7 @@ console.log(this.imgURI);
       _eraseGrid() {
         let grid = this.$.gamegrid;
         while (grid.firstChild) {
+          grid.removeEventListener('click', this._clickOnField);
           grid.removeChild(grid.firstChild);
         }
       }
