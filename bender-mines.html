@@ -258,7 +258,6 @@ console.log(this.imgURI);
           grid.appendChild(element);
         });
         console.log(__debug); // See console for a mines grid
-        console.log(this._playField);
       }
 
       _cleanGameGrid(startField) {
@@ -287,9 +286,13 @@ console.log(this.imgURI);
       }
 
       _clickOnField (me) {
-        console.log('click:', me);
+        console.log('click:', me.target, me.currentTarget);
       }
 
+      /**
+       * Scans the number of mines surrounding given `fieldNo`.
+       * @returns a number of mines surrounding `fieldNo`.
+       */
       _countMines(fieldNo) {
         let center = this._fieldNoToCoordinates(fieldNo);
         let coordinate = {};
@@ -306,7 +309,7 @@ console.log(this.imgURI);
       }
 
       /**
-       * Erase (if) existing gamegrid.
+       * Erase (if) existing game grid DOM structure.
        */
       _eraseGrid() {
         let grid = this.$.gamegrid;
@@ -315,6 +318,11 @@ console.log(this.imgURI);
         }
       }
 
+      /**
+       * TODO: It's not realy a game start ~ Its' more debug?
+       * it show a fisrt openings step, by selecting a field at
+       * the border of the game grid and clears the game grid on mines
+       */
       _gameStart() {
         let border = this._getBorder(); // Array of coordinates game grid border
         let field;
@@ -323,7 +331,7 @@ console.log(this.imgURI);
         do {
           field = Math.floor(Math.random() * border.length);
           field = border[field];
-          console.log('random:', field);
+
           if (this._playField[field] !== MINE) {
             startField = field;
           }
@@ -333,6 +341,10 @@ console.log(this.imgURI);
         this._cleanGameGrid(startField);
       }
 
+      /**
+       * Selects fieldNo's at the border of the X, Y game grid.
+       * @returns an array of fieldNo's at the border of the game grid.
+       */
       _getBorder() {
         let border = new Set(); // To avoid duplicates.
         let row;
@@ -355,6 +367,16 @@ console.log(this.imgURI);
         return Array.from(border); // From a Set to an Array.
       }
 
+      /**
+       * This function returns a validated array of fieldNo's.
+       * Validation is based of the fact that the surrounding fields,
+       * arround the center `fieldNo`, based on relative coordinates
+       * provided by `scanGrid`, does exist on the X, Y game grid.
+       * Doesn't fall outsite the game borders.
+       * @param {number} fieldNo is the center `fieldNo` of the scanGrid
+       * @param {array} scanGrid are the surrounding relative field coordinates to validate
+       * @returns an Array of valid fieldNo, based on the `scanGrid` array
+       */
       _scanGrid(fieldNo, scanGrid) {
         let center = this._fieldNoToCoordinates(fieldNo);
         let coordinate = {};
@@ -436,6 +458,7 @@ console.log(this.imgURI);
       }
 
       /**
+       * Validate the game difficulty level enummarated types.
        * @param {string} game level enumerated by ['easy', 'medium', 'hard']
        * @returns a valid game difficult level []. By default 'easy'.
        */
