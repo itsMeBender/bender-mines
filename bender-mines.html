@@ -295,10 +295,9 @@
 
       _clickOnField (me) {
         let fieldNo = me.currentTarget.id.substring(5); // Remove 'field'-label.
-        // console.log('click:', me.target, me.currentTarget);
-        // console.log('click:', fieldNo, this._playField[fieldNo]);
+
         if (this._playField[fieldNo] === MINE) {
-          console.log("Boom!");
+          this._showAllMines(fieldNo);
         } else {
           this._cleanGameGrid(fieldNo);
         }
@@ -309,12 +308,12 @@
        * @returns a number of mines surrounding `fieldNo`.
        */
       _countMines(fieldNo) {
-        let center = this._fieldNoToCoordinates(fieldNo);
-        let coordinate = {};
+        // let center = this._fieldNoToCoordinates(fieldNo);
+        // let coordinate = {};
         let mines = 0;
         let scanGrid = this._getScanGridNine(fieldNo);
 
-        scanGrid.forEach((scanGridField, idx) => {
+        scanGrid.forEach((scanGridField) => {
           if (this._playField[scanGridField] === MINE) {
             mines += 1;
           }
@@ -384,6 +383,49 @@
       }
 
       /**
+       * Using `fieldNo` the fields around this center are validated to be a existing field.
+       * Not lying outside the game grid coordinates.
+       * @param {number} fieldNo is the center of scan
+       * @returns an array of game grid valid fieldNo's
+       */
+       _getScanGridNine(fieldNo) {
+        fieldNo = parseInt(fieldNo, 10);
+        return this._scanGrid(fieldNo, [ // Grid 3x3, center is field
+          (fieldNo - 1 - this.fieldX), (fieldNo - this.fieldX), (fieldNo + 1 - this.fieldX),
+          (fieldNo - 1              ),                 fieldNo, (fieldNo + 1),
+          (fieldNo - 1 + this.fieldX), (fieldNo + this.fieldX), (fieldNo + 1 + this.fieldX),
+        ]);
+      }
+
+      /**
+       * Using `fieldNo` the upper-, lower, left- and right-field are validated to be a existing field.
+       * Not lying outside the game grid coordinates.
+       * TODO: Not used ?
+       * @param {number} fieldNo is the center of scan
+       * @returns an array of game grid valid fieldNo's
+       */
+      _getScanGridFive(fieldNo) {
+        fieldNo = parseInt(fieldNo, 10);
+        return this._scanGrid(fieldNo, [ // Grid horizontal and vertical center is field
+          (fieldNo - this.fieldX),
+          (fieldNo - 1), fieldNo, (fieldNo + 1),
+          (fieldNo + this.fieldX)
+        ]);
+      }
+
+      /**
+       * A given `fieldNo` is transformed into a x, y-coordinate.
+       * Based on the X- and Y-gamedimensions (the gamegrid).
+       * @param {number} fieldNo to translate into a game coordinate.
+       * @returns an object, containg properties x, y.
+       */
+      _fieldNoToCoordinates(fieldNo) {
+        let x = fieldNo % this.fieldX;
+        let y = Math.floor(fieldNo / this.fieldX);
+        return {'x': x, 'y': y};
+      }
+     
+      /**
        * This function returns a validated array of fieldNo's.
        * Validation is based of the fact that the surrounding fields,
        * arround the center `fieldNo`, based on relative coordinates
@@ -393,7 +435,7 @@
        * @param {array} scanGrid are the surrounding relative field coordinates to validate
        * @returns an Array of valid fieldNo, based on the `scanGrid` array
        */
-      _scanGrid(fieldNo, scanGrid) {
+       _scanGrid(fieldNo, scanGrid) {
         let center = this._fieldNoToCoordinates(fieldNo);
         let coordinate = {};
         let validScanGrid = [];
@@ -419,45 +461,18 @@
       }
 
       /**
-       * Using `fieldNo` the fields around this center are validated to be a existing field.
-       * Not lying outside the game grid coordinates.
-       * @param {number} fieldNo is the center of scan
-       * @returns an array of game grid valid fieldNo's
+       * @param {number} fieldNo click on by user ~ not used yett
        */
-       _getScanGridNine(fieldNo) {
-        return this._scanGrid(fieldNo, [ // Grid 3x3, center is field
-          (fieldNo - 1 - this.fieldX), (fieldNo - this.fieldX), (fieldNo + 1 - this.fieldX),
-          (fieldNo - 1              ),                 fieldNo, (fieldNo + 1),
-          (fieldNo - 1 + this.fieldX), (fieldNo + this.fieldX), (fieldNo + 1 + this.fieldX),
-        ]);
+      _showAllMines(fieldNo) {
+        this._playField.forEach((val, idx) => {
+          let element;
+          if (val === MINE) {
+            element = this.$.gamegrid.querySelector(`#field${idx}`);
+            element.setAttribute('style', `background-image: url(${this.imgURI.mine});`);
+          }
+        });
       }
 
-      /**
-       * Using `fieldNo` the upper-, lower, left- and right-field are validated to be a existing field.
-       * Not lying outside the game grid coordinates.
-       * @param {number} fieldNo is the center of scan
-       * @returns an array of game grid valid fieldNo's
-       */
-      _getScanGridFive(fieldNo) {
-        return this._scanGrid(fieldNo, [ // Grid horizontal and vertical center is field
-          (fieldNo - this.fieldX),
-          (fieldNo - 1), fieldNo, (fieldNo + 1),
-          (fieldNo + this.fieldX)
-        ]);
-      }
-
-      /**
-       * A given `fieldNo` is transformed into a x, y-coordinate.
-       * Based on the X- and Y-gamedimensions (the gamegrid).
-       * @param {number} fieldNo to translate into a game coordinate.
-       * @returns an object, containg properties x, y.
-       */
-      _fieldNoToCoordinates(fieldNo) {
-        let x = fieldNo % this.fieldX;
-        let y = Math.floor(fieldNo / this.fieldX);
-        return {'x': x, 'y': y};
-      }
-      
       /**
        * Validates the size of the game rectangle. Which must be within the range of 5 and 5 * 4.
        * If fails, default fieldsize '5' is returned.
