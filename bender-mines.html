@@ -210,7 +210,7 @@
       }
 
       randomizeGameGrid(gameOption) {
-        let difficulty = {'easy': 0.22, 'medium': 0.26, 'hard': 0.31}; // These are percentages
+        let difficulty = {'easy': 0.28, 'medium': 0.33, 'hard': 0.40}; // These are percentages
         let gameGridSize = this.fieldX * this.fieldY;
         let i = 0;
         let mines = Math.floor(difficulty[gameOption] * gameGridSize);
@@ -364,6 +364,8 @@
         let field;
         let startField;
 
+        // Give user a start, by displaying a first cleared section
+        /*
         do {
           field = Math.floor(Math.random() * border.length);
           field = border[field];
@@ -375,6 +377,7 @@
 
         // Create start situation.
         this._cleanGameGrid(startField);
+        */
       }
 
       /**
@@ -441,7 +444,6 @@
        */
       _handleFieldClick(me) {
         let fieldNo = me.currentTarget.id.substring(5); // Remove 'field'-label, to get index.
-console.log(this._countCleanFields());
 
         if (this._playField[fieldNo] === MINE) {
           this._showAllMines(fieldNo);
