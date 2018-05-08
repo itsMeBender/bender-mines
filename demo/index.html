@@ -10,7 +10,34 @@
 
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../../paper-button/paper-button.html">
     <link rel="import" href="../bender-mines.html">
+
+    <script>
+      window.addEventListener('WebComponentsReady', function(e) {
+        let game = document.querySelector('#checkEvent');
+        let button = document.querySelector('#restart').addEventListener('click', function (e) {
+          if (!e.target.disabled) {
+            game.drawGameGrid(15, 10);
+            document.querySelector('#restart').disabled = true;
+            document.querySelector('#restart').raised = false;
+            document.querySelector('#win').hidden = true;
+            document.querySelector('#loose').hidden = true;
+          }
+        });
+
+        game.addEventListener('bender-mines', function (e) {
+          document.querySelector('#restart').disabled = false;
+          document.querySelector('#restart').raised = true;
+          if (e.detail.isGameWon) {
+            document.querySelector('#win').hidden = false;
+          } else {
+            document.querySelector('#loose').hidden = false;
+          }
+        });
+
+      });
+    </script>
 
     <custom-style>
       <style is="custom-style" include="demo-pages-shared-styles">
@@ -22,6 +49,17 @@
             text-shadow: 1px 1px 3px #000;
           }
         }
+        p {
+          font-size: 2em;
+          font-weight: bold;
+        }
+        p#win {
+          color: green;
+        }
+        p#loose {
+          color: red;
+        }
+        
       </style>
     </custom-style>
   </head>
@@ -30,12 +68,29 @@
       <h3>Basic demo</h3>
       <demo-snippet>
         <template>
-          <bender-mines field-x="15" field-y="15" game="hard">
+          <bender-mines field-x="5" field-y="5" game="easy">
             <img src="tile_flag.png" width="32" height="32">
             <img src="tile_grid.png" width="32" height="32">
             <img src="tile_mine.png" width="32" height="32">
             <img src="tile_visited.png" width="32" height="32">
           </bender-mines>
+        </template>
+      </demo-snippet>
+    </div>
+
+    <div class="vertical-section-container centered">
+      <h3>Game layout and interaction</h3>
+      <demo-snippet>
+        <template>
+          <bender-mines id="checkEvent" field-x="15" field-y="15" game="easy">
+            <img src="tile_flag.png" width="32" height="32">
+            <img src="tile_grid.png" width="32" height="32">
+            <img src="tile_mine.png" width="32" height="32">
+            <img src="tile_visited.png" width="32" height="32">
+          </bender-mines>
+          <p id="win" hidden>You win</p>
+          <p id="loose" hidden>You loose</p>
+          <paper-button id="restart" disabled>Restart</paper-button>
         </template>
       </demo-snippet>
     </div>

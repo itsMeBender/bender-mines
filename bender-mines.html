@@ -139,9 +139,6 @@
         // https://www.polymer-project.org/2.0/docs/upgrade#callback-contracts-have-changed
         super.connectedCallback();
 
-        // Game interaction
-        // this.addEventListener('click', this._handleFieldClick.bind(this));
-
         // Monitor the content of SLOT
         // info is {target: '...', addedNodes: [...], removedNodes: [...]}
         this._observer = new Polymer.FlattenedNodesObserver(this, function(info) {
@@ -192,8 +189,7 @@
 
       disconnectedCallback() {
           super.disconnetedCallback();
-          // this.removeEventListener('click', this._handleFieldClick);
-          this._eraseGrid(); // Just to remove all the ' click' event on game fields
+          this._eraseGrid(); // Just to remove all the 'click' event on game fields
           this._observer.disconnect();
       }
 
@@ -438,20 +434,25 @@
       }
 
       /**
-       * User clicked on a field. Check field for a MINE and if so, show all mines.
-       * Else automatically clear game grid.
+       * Player clicked on a game grid field. Check field for a MINE and if so, show all mines.
+       * Else automatically clear game grid, from that position on.
+       * This function also DETECTS if the game is WON or LOST. In that case, EVENT 'bender-mines' is fired.
+       * Event DETAILS contails property 'isGameWon'. TRUE ehen game is finished. FALSE when hit a MINE.
        * @param {event} of the element CLICKED on.
        */
       _handleFieldClick(me) {
         let fieldNo = me.currentTarget.id.substring(5); // Remove 'field'-label, to get index.
 
         if (this._playField[fieldNo] === MINE) {
+          // Clicked on a MINE, YOU LOOSE
           this._showAllMines(fieldNo);
+          this.dispatchEvent(new CustomEvent('bender-mines', {detail: {isGameWon: false}}));
         } else {
           this._cleanGameGrid(fieldNo);
           if (this._countCleanFields() === 0) {
-            // Game finished.
+            // All FIELDS CLEARED, game finished. YOU WIN
             this._setFlagsToAllMines();
+            this.dispatchEvent(new CustomEvent('bender-mines', {detail: {isGameWon: true}}));
           }
         }
       }
