@@ -15,20 +15,29 @@
 
     <script>
       window.addEventListener('WebComponentsReady', function(e) {
-        let game = document.querySelector('#checkEvent');
-        let button = document.querySelector('#restart').addEventListener('click', function (e) {
+        let gameB = document.querySelector('#game-demo-B');
+        let restartBtn = document.querySelector('#restart');
+
+        function handleRestart(e) {
           if (!e.target.disabled) {
-            game.drawGameGrid(15, 10);
-            document.querySelector('#restart').disabled = true;
-            document.querySelector('#restart').raised = false;
+            gameB.drawGameGrid(15, 10);
+            restartBtn.disabled = true;
+            restartBtn.raised = false;
             document.querySelector('#win').hidden = true;
             document.querySelector('#loose').hidden = true;
           }
-        });
+        }
 
-        game.addEventListener('bender-mines', function (e) {
-          document.querySelector('#restart').disabled = false;
-          document.querySelector('#restart').raised = true;
+        // Wait for the game EVENT 'bender-mines'. 
+        // Returning the state of the game WIN or LOSE.
+        gameB.addEventListener('bender-mines', function (e) {
+          let restartBtn = document.querySelector('#restart');
+
+          // Make reset button ACTIVE.
+          restartBtn.disabled = false;
+          restartBtn.raised = true;
+
+          // Depending on FLAG 'isGameWon', show correct text.
           if (e.detail.isGameWon) {
             document.querySelector('#win').hidden = false;
           } else {
@@ -36,12 +45,14 @@
           }
         });
 
+        restartBtn.addEventListener('click', handleRestart);
+
       });
     </script>
 
     <custom-style>
       <style is="custom-style" include="demo-pages-shared-styles">
-        bender-mines {
+        bender-mines { /* Using a MIXIN to style the game GRID. */
           --mines-font: {
             color: cyan;
             font-size: 14px;
@@ -49,23 +60,31 @@
             text-shadow: 1px 1px 3px #000;
           }
         }
-        p {
+        p#win {
+          color: green;
           font-size: 2em;
           font-weight: bold;
         }
-        p#win {
-          color: green;
-        }
         p#loose {
           color: red;
+          font-size: 2em;
+          font-weight: bold;
         }
-        
+        .paper-button {
+          background: plum;
+          color: #222;
+        }
+        .paper-button[disabled] {
+          background: rgba(0, 0, 0, 0.1);
+          color: rgba(0, 0, 0, 0.4);
+        }
       </style>
     </custom-style>
   </head>
   <body>
     <div class="vertical-section-container centered">
-      <h3>Basic demo</h3>
+      <h3>Basic game demo</h3>
+      <p>Using a 5 by 5 game grid. With game level 'easy'.</p>
       <demo-snippet>
         <template>
           <bender-mines field-x="5" field-y="5" game="easy">
@@ -79,10 +98,11 @@
     </div>
 
     <div class="vertical-section-container centered">
-      <h3>Game layout and interaction</h3>
+      <h3>Game scenarion WIN or LOSE</h3>
+      <p>Demonstrating a simple UI construct for game feedback. After a game is won or lost.</p>
       <demo-snippet>
         <template>
-          <bender-mines id="checkEvent" field-x="15" field-y="15" game="easy">
+          <bender-mines id="game-demo-B" field-x="15" field-y="15" game="hard">
             <img src="tile_flag.png" width="32" height="32">
             <img src="tile_grid.png" width="32" height="32">
             <img src="tile_mine.png" width="32" height="32">
@@ -90,9 +110,10 @@
           </bender-mines>
           <p id="win" hidden>You win</p>
           <p id="loose" hidden>You loose</p>
-          <paper-button id="restart" disabled>Restart</paper-button>
+          <paper-button class="paper-button" id="restart" disabled>Restart</paper-button>
         </template>
       </demo-snippet>
     </div>
+
   </body>
 </html>
